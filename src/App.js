@@ -1,25 +1,52 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react'
+import Login from './components/Login'
+import Register from './components/Register'
+import PlantDashboard from './components/PlantDashboard'
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+  const [username, setUsername] = useState('')
+  const [showRegister, setShowRegister] = useState(false)
+
+  // Restore username from localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser')
+    if (savedUser) setUsername(savedUser)
+  }, [])
+
+  const handleLogin = user => {
+    setUsername(user)
+    localStorage.setItem('currentUser', user) // persist login
+  }
+
+  const handleLogout = () => {
+    setUsername('')
+    localStorage.removeItem('currentUser') // clear on logout
+  }
+
+  if (!username) {
+    return showRegister ? (
+      <div>
+        <Register
+          onRegister={user => {
+            setUsername(user)
+            localStorage.setItem('currentUser', user)
+          }}
+        />
         <p>
-          Edit <code>src/App.js</code> and save to reload.
+          Already have an account? <button onClick={() => setShowRegister(false)}>Login</button>
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+      </div>
+    ) : (
+      <div>
+        <Login onLogin={handleLogin} />
+        <p>
+          Don't have an account? <button onClick={() => setShowRegister(true)}>Register</button>
+        </p>
+      </div>
+    )
+  }
+
+  return <PlantDashboard username={username} onLogout={handleLogout} />
 }
 
-export default App;
+export default App
