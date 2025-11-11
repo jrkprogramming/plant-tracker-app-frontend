@@ -54,8 +54,11 @@ const PlantList = ({ plants, onWater, onDelete, onUpdate }) => {
             </div>
 
             <div>
-              Last Watered: {plant.lastWateredDate || 'N/A'} | Watering Frequency: {plant.wateringFrequencyDays} days
+              Last Watered: {plant.lastWateredDate || 'N/A'} | Next Water Date:{' '}
+              {plant.lastWateredDate ? new Date(new Date(plant.lastWateredDate).getTime() + plant.wateringFrequencyDays * 24 * 60 * 60 * 1000).toLocaleDateString() : 'N/A'}
             </div>
+
+            <div>Watering Frequency: {plant.wateringFrequencyDays} days</div>
 
             {/* New optional info fields */}
             <div style={{ marginTop: '8px', fontSize: '0.9em' }}>
@@ -86,7 +89,6 @@ const PlantList = ({ plants, onWater, onDelete, onUpdate }) => {
               )}
             </div>
 
-            {/* Status */}
             <div style={{ marginTop: '6px', fontWeight: 'bold' }}>
               {overdue ? (
                 <span style={{ color: 'red' }}>💧 Needs Watering!</span>
