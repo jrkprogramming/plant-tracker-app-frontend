@@ -26,7 +26,6 @@ const AddPlant = ({ username, onPlantAdded }) => {
         notes,
         ownerUsername: username,
       })
-      // Reset form
       setName('')
       setSpecies('')
       setWateringFrequency(7)

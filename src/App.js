@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import Login from './components/Login'
-import Register from './components/Register'
+import Login from './pages/auth/Login'
+import Register from './pages/auth/Register'
 import PlantDashboard from './components/PlantDashboard'
 
 function App() {
