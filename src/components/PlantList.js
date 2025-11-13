@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import EditPlant from './EditPlant'
 
-const PlantList = ({ plants, onWater, onDelete, onUpdate }) => {
+const PlantList = ({ plants, onWater, onDelete, onUpdate, onAddLog, onAddComment, onDeleteLog }) => {
   const [editingPlantId, setEditingPlantId] = useState(null)
+  const [newLogNote, setNewLogNote] = useState('')
+  const [newComment, setNewComment] = useState('')
 
   if (!plants.length) return <p>No plants yet. Add one!</p>
 
-  // Helper function: check if plant is overdue
   const isOverdue = (lastWateredDate, wateringFrequencyDays) => {
     if (!lastWateredDate || !wateringFrequencyDays) return false
     const last = new Date(lastWateredDate)
@@ -15,7 +16,6 @@ const PlantList = ({ plants, onWater, onDelete, onUpdate }) => {
     return new Date() > nextDue
   }
 
-  // Helper function: days until next watering
   const daysUntilNextWatering = (lastWateredDate, wateringFrequencyDays) => {
     if (!lastWateredDate || !wateringFrequencyDays) return null
     const last = new Date(lastWateredDate)
@@ -25,16 +25,9 @@ const PlantList = ({ plants, onWater, onDelete, onUpdate }) => {
     return diff
   }
 
-  // Sort overdue plants first
-  const sortedPlants = [...plants].sort((a, b) => {
-    const aOverdue = isOverdue(a.lastWateredDate, a.wateringFrequencyDays)
-    const bOverdue = isOverdue(b.lastWateredDate, b.wateringFrequencyDays)
-    return bOverdue - aOverdue
-  })
-
   return (
     <ul style={{ listStyleType: 'none', padding: 0 }}>
-      {sortedPlants.map(plant => {
+      {plants.map(plant => {
         const overdue = isOverdue(plant.lastWateredDate, plant.wateringFrequencyDays)
         const daysLeft = daysUntilNextWatering(plant.lastWateredDate, plant.wateringFrequencyDays)
 
@@ -49,18 +42,15 @@ const PlantList = ({ plants, onWater, onDelete, onUpdate }) => {
               backgroundColor: overdue ? '#ffe6e6' : '#e6ffe6',
             }}
           >
-            <div style={{ marginBottom: '8px' }}>
+            <div>
               <b>{plant.name}</b> ({plant.species})
             </div>
-
             <div>
               Last Watered: {plant.lastWateredDate || 'N/A'} | Next Water Date:{' '}
               {plant.lastWateredDate ? new Date(new Date(plant.lastWateredDate).getTime() + plant.wateringFrequencyDays * 24 * 60 * 60 * 1000).toLocaleDateString() : 'N/A'}
             </div>
-
             <div>Watering Frequency: {plant.wateringFrequencyDays} days</div>
 
-            {/* New optional info fields */}
             <div style={{ marginTop: '8px', fontSize: '0.9em' }}>
               {plant.soilType && (
                 <div>
@@ -101,20 +91,64 @@ const PlantList = ({ plants, onWater, onDelete, onUpdate }) => {
 
             <div style={{ marginTop: '10px' }}>
               <button onClick={() => onWater(plant)}>Water</button>
-              <button onClick={() => onDelete(plant.id)}>Delete</button>
+              <button onClick={() => onDelete(plant._id)}>Delete</button>
               <button onClick={() => setEditingPlantId(plant._id)}>Edit</button>
             </div>
 
             {editingPlantId === plant._id && (
               <EditPlant
                 plant={plant}
-                onUpdate={(id, updatedData) => {
-                  onUpdate(id, updatedData)
+                onUpdate={(id, data) => {
+                  onUpdate(id, data)
                   setEditingPlantId(null)
                 }}
-                onCancel={() => setEditingPlantId(null)}
               />
             )}
+
+            {/* Logs */}
+            <div style={{ marginTop: '10px' }}>
+              <h4>Logs:</h4>
+              {plant.logs &&
+                plant.logs.map((log, index) => (
+                  <div key={index} style={{ borderTop: '1px solid #ccc', marginTop: '5px', paddingTop: '5px' }}>
+                    <img src={log.photoUrl} alt="log" width={100} />
+                    <div>{log.note}</div>
+                    <div>{new Date(log.timestamp).toLocaleString()}</div>
+
+                    {/* Comments */}
+                    {log.comments &&
+                      log.comments.map((c, i) => (
+                        <div key={i} style={{ marginLeft: '10px', fontStyle: 'italic' }}>
+                          {c.username}: {c.comment}
+                        </div>
+                      ))}
+
+                    {/* Add comment */}
+                    <input placeholder="Add comment" value={newComment} onChange={e => setNewComment(e.target.value)} />
+                    <button
+                      onClick={() => {
+                        onAddComment(plant.id, index, { username: 'Me', comment: newComment })
+                        setNewComment('')
+                      }}
+                    >
+                      Add Comment
+                    </button>
+
+                    <button onClick={() => onDeleteLog(plant.id, index)}>Delete Log</button>
+                  </div>
+                ))}
+
+              {/* Add log */}
+              <input placeholder="New log note" value={newLogNote} onChange={e => setNewLogNote(e.target.value)} />
+              <button
+                onClick={() => {
+                  onAddLog(plant.id, { note: newLogNote, photoUrl: '' })
+                  setNewLogNote('')
+                }}
+              >
+                Add Log
+              </button>
+            </div>
           </li>
         )
       })}

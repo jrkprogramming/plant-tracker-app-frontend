@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-const EditPlant = ({ plant, onUpdate }) => {
+const EditPlant = ({ plant, onUpdate, onCancel }) => {
   const [name, setName] = useState('')
   const [species, setSpecies] = useState('')
   const [lastWateredDate, setLastWateredDate] = useState('')
@@ -11,7 +11,6 @@ const EditPlant = ({ plant, onUpdate }) => {
   const [idealTemperature, setIdealTemperature] = useState('')
   const [notes, setNotes] = useState('')
 
-  // Initialize form fields when plant prop changes
   useEffect(() => {
     if (plant) {
       setName(plant.name || '')
@@ -47,53 +46,23 @@ const EditPlant = ({ plant, onUpdate }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
-      <div>
-        <label>Name:</label>
-        <input value={name} onChange={e => setName(e.target.value)} />
-      </div>
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px', border: '1px solid #ddd', padding: '10px', borderRadius: '8px' }}>
+      <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
+      <input placeholder="Species" value={species} onChange={e => setSpecies(e.target.value)} />
+      <input type="date" placeholder="Last Watered Date" value={lastWateredDate} onChange={e => setLastWateredDate(e.target.value)} />
+      <input type="number" placeholder="Watering Frequency (days)" value={wateringFrequencyDays} onChange={e => setWateringFrequencyDays(e.target.value)} />
+      <input placeholder="Soil Type" value={soilType} onChange={e => setSoilType(e.target.value)} />
+      <input placeholder="Fertilizer" value={fertilizer} onChange={e => setFertilizer(e.target.value)} />
+      <input placeholder="Sun Exposure" value={sunExposure} onChange={e => setSunExposure(e.target.value)} />
+      <input placeholder="Ideal Temperature" value={idealTemperature} onChange={e => setIdealTemperature(e.target.value)} />
+      <textarea placeholder="Notes" value={notes} onChange={e => setNotes(e.target.value)} />
 
-      <div>
-        <label>Species:</label>
-        <input value={species} onChange={e => setSpecies(e.target.value)} />
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button type="submit">Update Plant</button>
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
       </div>
-
-      <div>
-        <label>Last Watered Date:</label>
-        <input type="date" value={lastWateredDate} onChange={e => setLastWateredDate(e.target.value)} />
-      </div>
-
-      <div>
-        <label>Watering Frequency (days):</label>
-        <input type="number" value={wateringFrequencyDays} onChange={e => setWateringFrequencyDays(e.target.value)} />
-      </div>
-
-      <div>
-        <label>Soil Type:</label>
-        <input value={soilType} onChange={e => setSoilType(e.target.value)} />
-      </div>
-
-      <div>
-        <label>Fertilizer:</label>
-        <input value={fertilizer} onChange={e => setFertilizer(e.target.value)} />
-      </div>
-
-      <div>
-        <label>Sun Exposure:</label>
-        <input value={sunExposure} onChange={e => setSunExposure(e.target.value)} />
-      </div>
-
-      <div>
-        <label>Ideal Temperature:</label>
-        <input value={idealTemperature} onChange={e => setIdealTemperature(e.target.value)} />
-      </div>
-
-      <div>
-        <label>Notes:</label>
-        <textarea value={notes} onChange={e => setNotes(e.target.value)} />
-      </div>
-
-      <button type="submit">Update Plant</button>
     </form>
   )
 }

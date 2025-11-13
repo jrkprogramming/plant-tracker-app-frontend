@@ -26,6 +26,8 @@ const AddPlant = ({ username, onPlantAdded }) => {
         notes,
         ownerUsername: username,
       })
+
+      // Reset form fields
       setName('')
       setSpecies('')
       setWateringFrequency(7)
@@ -34,6 +36,7 @@ const AddPlant = ({ username, onPlantAdded }) => {
       setSunExposure('')
       setIdealTemperature('')
       setNotes('')
+
       onPlantAdded()
     } catch (err) {
       console.error('Error adding plant:', err)
@@ -41,7 +44,7 @@ const AddPlant = ({ username, onPlantAdded }) => {
   }
 
   return (
-    <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px' }}>
+    <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', marginBottom: '20px' }}>
       <input placeholder="Plant Name" value={name} onChange={e => setName(e.target.value)} required />
       <input placeholder="Species" value={species} onChange={e => setSpecies(e.target.value)} required />
       <input type="number" min={1} placeholder="Watering Frequency (days)" value={wateringFrequency} onChange={e => setWateringFrequency(e.target.value)} required />
@@ -50,7 +53,6 @@ const AddPlant = ({ username, onPlantAdded }) => {
       <input placeholder="Sun Exposure" value={sunExposure} onChange={e => setSunExposure(e.target.value)} />
       <input placeholder="Ideal Temperature" value={idealTemperature} onChange={e => setIdealTemperature(e.target.value)} />
       <textarea placeholder="Notes" value={notes} onChange={e => setNotes(e.target.value)} />
-
       <button type="submit">Add Plant</button>
     </form>
   )
