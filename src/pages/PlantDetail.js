@@ -182,7 +182,7 @@ const PlantDetails = ({ username }) => {
                 <ul>
                   {log.comments.map((c, i) => (
                     <li key={i}>
-                      {c.comment || 'No comment'} <i>({new Date(c.timestamp).toLocaleString()})</i>
+                      {c.username}: {c.comment || 'No comment'} <i>({new Date(c.timestamp).toLocaleString()})</i>
                     </li>
                   ))}
                 </ul>
