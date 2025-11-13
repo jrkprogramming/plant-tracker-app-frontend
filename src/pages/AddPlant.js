@@ -6,7 +6,7 @@ const AddPlant = ({ username }) => {
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [species, setSpecies] = useState('')
-  const [wateringFrequency, setWateringFrequency] = useState(7)
+  const [wateringFrequency, setWateringFrequency] = useState()
   const [soilType, setSoilType] = useState('')
   const [fertilizer, setFertilizer] = useState('')
   const [sunExposure, setSunExposure] = useState('')

@@ -42,11 +42,24 @@ const PlantDetails = ({ username }) => {
     }
   }
 
-  // Water plant (update lastWateredDate to today)
+  // Delete plant
+  const deletePlant = async () => {
+    if (!window.confirm('Are you sure you want to delete this plant?')) return
+
+    try {
+      await axios.delete(`http://localhost:8080/api/plants/${plantId}?username=${username}`)
+      navigate('/dashboard')
+    } catch (err) {
+      console.error('Error deleting plant:', err)
+      alert('Failed to delete plant.')
+    }
+  }
+
+  // Water plant
   const waterPlant = async () => {
     if (!plant) return
     try {
-      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+      const today = new Date().toISOString().split('T')[0]
       await axios.put(`http://localhost:8080/api/plants/${plantId}?username=${username}`, {
         ...plant,
         lastWateredDate: today,
@@ -101,7 +114,7 @@ const PlantDetails = ({ username }) => {
   if (loading) return <p>Loading...</p>
   if (!plant) return <p>Plant not found</p>
 
-  // Determine if watering is overdue
+  // Determine next watering date / overdue
   let nextWaterDate = 'N/A'
   let overdue = false
   if (plant.lastWateredDate && plant.wateringFrequencyDays) {
@@ -121,12 +134,31 @@ const PlantDetails = ({ username }) => {
           <h2>
             {plant.name} ({plant.species})
           </h2>
-          <button onClick={() => setEditing(true)} style={{ marginRight: '10px' }}>
-            Edit Plant
-          </button>
-          <button onClick={waterPlant} style={{ color: 'blue' }}>
-            Water Plant {overdue && '⚠️'}
-          </button>
+
+          {/* EDIT / WATER / DELETE */}
+          <div style={{ marginBottom: '15px' }}>
+            <button onClick={() => setEditing(true)} style={{ marginRight: '10px' }}>
+              Edit Plant
+            </button>
+
+            <button onClick={waterPlant} style={{ marginRight: '10px', color: 'blue' }}>
+              Water Plant {overdue && '⚠️'}
+            </button>
+
+            <button
+              onClick={deletePlant}
+              style={{
+                background: 'red',
+                color: 'white',
+                padding: '6px 10px',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+              }}
+            >
+              Delete Plant
+            </button>
+          </div>
 
           <p>
             <b>Last Watered:</b> {plant.lastWateredDate || 'N/A'}
@@ -137,6 +169,7 @@ const PlantDetails = ({ username }) => {
           <p>
             <b>Watering Frequency:</b> {plant.wateringFrequencyDays} days
           </p>
+
           {plant.soilType && (
             <p>
               <b>Soil Type:</b> {plant.soilType}
@@ -169,6 +202,7 @@ const PlantDetails = ({ username }) => {
 
       <hr />
       <h3>Logs</h3>
+
       {plant.logs && plant.logs.length > 0 ? (
         <ul>
           {plant.logs.map((log, index) => (
@@ -182,7 +216,7 @@ const PlantDetails = ({ username }) => {
                 <ul>
                   {log.comments.map((c, i) => (
                     <li key={i}>
-                      {c.username}: {c.comment || 'No comment'} <i>({new Date(c.timestamp).toLocaleString()})</i>
+                      {c.username}: {c.comment} <i>({new Date(c.timestamp).toLocaleString()})</i>
                     </li>
                   ))}
                 </ul>
@@ -190,6 +224,7 @@ const PlantDetails = ({ username }) => {
 
               <input type="text" placeholder="Add comment" value={newCommentText[index] || ''} onChange={e => setNewCommentText(prev => ({ ...prev, [index]: e.target.value }))} />
               <button onClick={() => addComment(index)}>Add Comment</button>
+
               <button onClick={() => deleteLog(index)} style={{ marginLeft: '10px', color: 'red' }}>
                 Delete Log
               </button>
