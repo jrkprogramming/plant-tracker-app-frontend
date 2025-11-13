@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import EditPlant from '../components/EditPlant'
 
 const PlantDetails = ({ username }) => {
   const { id: plantId } = useParams()
@@ -8,7 +9,8 @@ const PlantDetails = ({ username }) => {
   const [plant, setPlant] = useState(null)
   const [loading, setLoading] = useState(true)
   const [newLogText, setNewLogText] = useState('')
-  const [newCommentText, setNewCommentText] = useState({}) // key = logIndex
+  const [newCommentText, setNewCommentText] = useState({})
+  const [editing, setEditing] = useState(false)
 
   // Fetch plant details
   const fetchPlant = async () => {
@@ -28,7 +30,19 @@ const PlantDetails = ({ username }) => {
     fetchPlant()
   }, [plantId])
 
-  // Add a new log
+  // Update plant
+  const updatePlant = async (id, updatedData) => {
+    try {
+      await axios.put(`http://localhost:8080/api/plants/${id}?username=${username}`, updatedData)
+      setEditing(false)
+      fetchPlant()
+    } catch (err) {
+      console.error('Error updating plant:', err)
+      alert('Failed to update plant.')
+    }
+  }
+
+  // Add log
   const addLog = async () => {
     if (!newLogText.trim()) return
     try {
@@ -42,7 +56,7 @@ const PlantDetails = ({ username }) => {
     }
   }
 
-  // Add comment to a log
+  // Add comment
   const addComment = async logIndex => {
     const text = newCommentText[logIndex]
     if (!text || !text.trim()) return
@@ -58,7 +72,7 @@ const PlantDetails = ({ username }) => {
     }
   }
 
-  // Delete a log
+  // Delete log
   const deleteLog = async logIndex => {
     try {
       await axios.delete(`http://localhost:8080/api/plants/${plantId}/logs/${logIndex}?username=${username}`)
@@ -75,39 +89,47 @@ const PlantDetails = ({ username }) => {
     <div style={{ maxWidth: '600px', margin: 'auto' }}>
       <button onClick={() => navigate(-1)}>← Back</button>
 
-      <h2>
-        {plant.name} ({plant.species})
-      </h2>
-      <p>
-        <b>Last Watered:</b> {plant.lastWateredDate || 'N/A'}
-      </p>
-      <p>
-        <b>Watering Frequency:</b> {plant.wateringFrequencyDays} days
-      </p>
-      {plant.soilType && (
-        <p>
-          <b>Soil Type:</b> {plant.soilType}
-        </p>
-      )}
-      {plant.fertilizer && (
-        <p>
-          <b>Fertilizer:</b> {plant.fertilizer}
-        </p>
-      )}
-      {plant.sunExposure && (
-        <p>
-          <b>Sun Exposure:</b> {plant.sunExposure}
-        </p>
-      )}
-      {plant.idealTemperature && (
-        <p>
-          <b>Ideal Temp:</b> {plant.idealTemperature}
-        </p>
-      )}
-      {plant.notes && (
-        <p>
-          <b>Notes:</b> {plant.notes}
-        </p>
+      {!editing ? (
+        <>
+          <h2>
+            {plant.name} ({plant.species})
+          </h2>
+          <button onClick={() => setEditing(true)}>Edit Plant</button>
+
+          <p>
+            <b>Last Watered:</b> {plant.lastWateredDate || 'N/A'}
+          </p>
+          <p>
+            <b>Watering Frequency:</b> {plant.wateringFrequencyDays} days
+          </p>
+          {plant.soilType && (
+            <p>
+              <b>Soil Type:</b> {plant.soilType}
+            </p>
+          )}
+          {plant.fertilizer && (
+            <p>
+              <b>Fertilizer:</b> {plant.fertilizer}
+            </p>
+          )}
+          {plant.sunExposure && (
+            <p>
+              <b>Sun Exposure:</b> {plant.sunExposure}
+            </p>
+          )}
+          {plant.idealTemperature && (
+            <p>
+              <b>Ideal Temp:</b> {plant.idealTemperature}
+            </p>
+          )}
+          {plant.notes && (
+            <p>
+              <b>Notes:</b> {plant.notes}
+            </p>
+          )}
+        </>
+      ) : (
+        <EditPlant plant={plant} onUpdate={updatePlant} onCancel={() => setEditing(false)} />
       )}
 
       <hr />
@@ -121,7 +143,6 @@ const PlantDetails = ({ username }) => {
                 <i>{new Date(log.timestamp).toLocaleString()}</i>
               </p>
 
-              {/* Comments */}
               {log.comments && log.comments.length > 0 && (
                 <ul>
                   {log.comments.map((c, i) => (
@@ -132,7 +153,6 @@ const PlantDetails = ({ username }) => {
                 </ul>
               )}
 
-              {/* Add comment input */}
               <input type="text" placeholder="Add comment" value={newCommentText[index] || ''} onChange={e => setNewCommentText(prev => ({ ...prev, [index]: e.target.value }))} />
               <button onClick={() => addComment(index)}>Add Comment</button>
               <button onClick={() => deleteLog(index)} style={{ marginLeft: '10px', color: 'red' }}>
