@@ -1,51 +1,29 @@
 import React, { useEffect, useState } from 'react'
 import axios from 'axios'
-import AddPlant from './AddPlants'
+import AddPlant from './AddPlant'
 import PlantList from './PlantList'
+import { useNavigate } from 'react-router-dom'
 
 const PlantDashboard = ({ username, onLogout }) => {
   const [plants, setPlants] = useState([])
+  const navigate = useNavigate()
 
   const fetchPlants = async () => {
     try {
       const res = await axios.get(`http://localhost:8080/api/plants?username=${username}`)
-      setPlants(res.data)
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const waterPlant = async plant => {
-    try {
-      await axios.put(`http://localhost:8080/api/plants/${plant.id}?username=${username}`, {
-        ...plant,
-        lastWateredDate: new Date().toISOString().split('T')[0],
+      const plantsWithOverdue = res.data.map(plant => {
+        let overdue = false
+        if (plant.lastWateredDate && plant.wateringFrequencyDays) {
+          const lastWatered = new Date(plant.lastWateredDate)
+          const nextWater = new Date(lastWatered)
+          nextWater.setDate(lastWatered.getDate() + plant.wateringFrequencyDays)
+          overdue = nextWater < new Date() // If next water date is in the past
+        }
+        return { ...plant, overdue }
       })
-      fetchPlants()
+      setPlants(plantsWithOverdue)
     } catch (err) {
-      console.error(err)
-    }
-  }
-
-  const deletePlant = async id => {
-    try {
-      await axios.delete(`http://localhost:8080/api/plants/${id}?username=${username}`)
-      fetchPlants()
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-	const updatePlant = async (id, updatedData) => {
-    try {
-      const response = await axios.put(`http://localhost:8080/api/plants/${id}?username=${username}`, updatedData)
-      const updatedPlant = response.data
-
-      // Update local state to reflect the changes immediately
-      setPlants(plants.map(p => (p._id === id ? updatedPlant : p)))
-			window.location.reload()
-    } catch (err) {
-      console.error('Update failed', err)
+      console.error('Error fetching plants:', err)
     }
   }
 
@@ -58,7 +36,7 @@ const PlantDashboard = ({ username, onLogout }) => {
       <h2>{username}'s Plants 🌱</h2>
       <button onClick={onLogout}>Logout</button>
       <AddPlant username={username} onPlantAdded={fetchPlants} />
-      <PlantList plants={plants} onWater={waterPlant} onDelete={deletePlant} onUpdate={updatePlant} />
+      <PlantList plants={plants} username={username} onView={id => navigate(`/plants/${id}`)} onRefresh={fetchPlants} />
     </div>
   )
 }
