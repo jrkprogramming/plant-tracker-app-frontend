@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Login from './pages/auth/Login'
 import Register from './pages/auth/Register'
 import PlantDashboard from './components/PlantDashboard'
+import PlantDetail from './pages/PlantDetail'
 
 function App() {
   const [username, setUsername] = useState('')
-  const [showRegister, setShowRegister] = useState(false)
 
   // Restore username from localStorage on mount
   useEffect(() => {
@@ -23,30 +24,23 @@ function App() {
     localStorage.removeItem('currentUser') // clear on logout
   }
 
-  if (!username) {
-    return showRegister ? (
-      <div>
-        <Register
-          onRegister={user => {
-            setUsername(user)
-            localStorage.setItem('currentUser', user)
-          }}
-        />
-        <p>
-          Already have an account? <button onClick={() => setShowRegister(false)}>Login</button>
-        </p>
-      </div>
-    ) : (
-      <div>
-        <Login onLogin={handleLogin} />
-        <p>
-          Don't have an account? <button onClick={() => setShowRegister(true)}>Register</button>
-        </p>
-      </div>
-    )
-  }
-
-  return <PlantDashboard username={username} onLogout={handleLogout} />
+  return (
+      <Routes>
+        {/* Auth routes */}
+        {!username ? (
+          <>
+            <Route path="/" element={<Login onLogin={handleLogin} />} />
+            <Route path="/register" element={<Register onRegister={handleLogin} />} />
+          </>
+        ) : (
+          <>
+            {/* Dashboard and plant details routes */}
+            <Route path="/dashboard" element={<PlantDashboard username={username} onLogout={handleLogout} />} />
+            <Route path="/plants/:id" element={<PlantDetail username={username} />} />
+          </>
+        )}
+      </Routes>
+  )
 }
 
 export default App
