@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import axios from 'axios'
-import AddPlant from './AddPlant'
-import PlantList from './PlantList'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import PlantList from './PlantList'
 
 const PlantDashboard = ({ username, onLogout }) => {
   const [plants, setPlants] = useState([])
@@ -17,7 +16,7 @@ const PlantDashboard = ({ username, onLogout }) => {
           const lastWatered = new Date(plant.lastWateredDate)
           const nextWater = new Date(lastWatered)
           nextWater.setDate(lastWatered.getDate() + plant.wateringFrequencyDays)
-          overdue = nextWater < new Date() // If next water date is in the past
+          overdue = nextWater < new Date()
         }
         return { ...plant, overdue }
       })
@@ -35,7 +34,10 @@ const PlantDashboard = ({ username, onLogout }) => {
     <div>
       <h2>{username}'s Plants 🌱</h2>
       <button onClick={onLogout}>Logout</button>
-      <AddPlant username={username} onPlantAdded={fetchPlants} />
+      <button onClick={() => navigate('/add-plant')} style={{ marginLeft: '10px' }}>
+        ➕ Add Plant
+      </button>
+
       <PlantList plants={plants} username={username} onView={id => navigate(`/plants/${id}`)} onRefresh={fetchPlants} />
     </div>
   )

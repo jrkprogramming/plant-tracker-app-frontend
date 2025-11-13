@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
-const AddPlant = ({ username, onPlantAdded }) => {
+const AddPlant = ({ username }) => {
+  const navigate = useNavigate()
   const [name, setName] = useState('')
   const [species, setSpecies] = useState('')
   const [wateringFrequency, setWateringFrequency] = useState(7)
@@ -27,24 +29,16 @@ const AddPlant = ({ username, onPlantAdded }) => {
         ownerUsername: username,
       })
 
-      // Reset form fields
-      setName('')
-      setSpecies('')
-      setWateringFrequency(7)
-      setSoilType('')
-      setFertilizer('')
-      setSunExposure('')
-      setIdealTemperature('')
-      setNotes('')
-
-      onPlantAdded()
+      navigate('/') // Redirect back to dashboard
     } catch (err) {
       console.error('Error adding plant:', err)
+      alert('Failed to add plant. Try again.')
     }
   }
 
   return (
-    <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', marginBottom: '20px' }}>
+    <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px', margin: 'auto', marginTop: '20px' }}>
+      <h2>Add New Plant</h2>
       <input placeholder="Plant Name" value={name} onChange={e => setName(e.target.value)} required />
       <input placeholder="Species" value={species} onChange={e => setSpecies(e.target.value)} required />
       <input type="number" min={1} placeholder="Watering Frequency (days)" value={wateringFrequency} onChange={e => setWateringFrequency(e.target.value)} required />
@@ -53,7 +47,12 @@ const AddPlant = ({ username, onPlantAdded }) => {
       <input placeholder="Sun Exposure" value={sunExposure} onChange={e => setSunExposure(e.target.value)} />
       <input placeholder="Ideal Temperature" value={idealTemperature} onChange={e => setIdealTemperature(e.target.value)} />
       <textarea placeholder="Notes" value={notes} onChange={e => setNotes(e.target.value)} />
-      <button type="submit">Add Plant</button>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        <button type="submit">Add Plant</button>
+        <button type="button" onClick={() => navigate('/')}>
+          Cancel
+        </button>
+      </div>
     </form>
   )
 }
