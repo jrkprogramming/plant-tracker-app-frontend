@@ -42,6 +42,22 @@ const PlantDetails = ({ username }) => {
     }
   }
 
+  // Water plant (update lastWateredDate to today)
+  const waterPlant = async () => {
+    if (!plant) return
+    try {
+      const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+      await axios.put(`http://localhost:8080/api/plants/${plantId}?username=${username}`, {
+        ...plant,
+        lastWateredDate: today,
+      })
+      fetchPlant()
+    } catch (err) {
+      console.error('Error watering plant:', err)
+      alert('Failed to water plant.')
+    }
+  }
+
   // Add log
   const addLog = async () => {
     if (!newLogText.trim()) return
@@ -85,6 +101,17 @@ const PlantDetails = ({ username }) => {
   if (loading) return <p>Loading...</p>
   if (!plant) return <p>Plant not found</p>
 
+  // Determine if watering is overdue
+  let nextWaterDate = 'N/A'
+  let overdue = false
+  if (plant.lastWateredDate && plant.wateringFrequencyDays) {
+    const lastWatered = new Date(plant.lastWateredDate)
+    const nextWater = new Date(lastWatered)
+    nextWater.setDate(lastWatered.getDate() + plant.wateringFrequencyDays)
+    nextWaterDate = nextWater.toLocaleDateString()
+    overdue = new Date() > nextWater
+  }
+
   return (
     <div style={{ maxWidth: '600px', margin: 'auto' }}>
       <button onClick={() => navigate(-1)}>← Back</button>
@@ -94,10 +121,18 @@ const PlantDetails = ({ username }) => {
           <h2>
             {plant.name} ({plant.species})
           </h2>
-          <button onClick={() => setEditing(true)}>Edit Plant</button>
+          <button onClick={() => setEditing(true)} style={{ marginRight: '10px' }}>
+            Edit Plant
+          </button>
+          <button onClick={waterPlant} style={{ color: 'blue' }}>
+            Water Plant {overdue && '⚠️'}
+          </button>
 
           <p>
             <b>Last Watered:</b> {plant.lastWateredDate || 'N/A'}
+          </p>
+          <p>
+            <b>Next Water:</b> {nextWaterDate}
           </p>
           <p>
             <b>Watering Frequency:</b> {plant.wateringFrequencyDays} days
