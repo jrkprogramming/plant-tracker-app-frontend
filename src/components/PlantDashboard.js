@@ -11,9 +11,19 @@ const PlantDashboard = ({ username, onLogout }) => {
   const fetchPlants = async () => {
     try {
       const res = await axios.get(`http://localhost:8080/api/plants?username=${username}`)
-      setPlants(res.data)
+      const plantsWithOverdue = res.data.map(plant => {
+        let overdue = false
+        if (plant.lastWateredDate && plant.wateringFrequencyDays) {
+          const lastWatered = new Date(plant.lastWateredDate)
+          const nextWater = new Date(lastWatered)
+          nextWater.setDate(lastWatered.getDate() + plant.wateringFrequencyDays)
+          overdue = nextWater < new Date() // If next water date is in the past
+        }
+        return { ...plant, overdue }
+      })
+      setPlants(plantsWithOverdue)
     } catch (err) {
-      console.error(err)
+      console.error('Error fetching plants:', err)
     }
   }
 
