@@ -11,6 +11,7 @@ const EditPlant = ({ plant, onUpdate, onCancel }) => {
   const [idealTemperature, setIdealTemperature] = useState('')
   const [notes, setNotes] = useState('')
   const [isPublic, setIsPublic] = useState(true)
+  const fieldStyle = { display: 'flex', flexDirection: 'column', gap: '4px' }
 
   useEffect(() => {
     if (plant) {
@@ -73,18 +74,45 @@ const EditPlant = ({ plant, onUpdate, onCancel }) => {
         borderRadius: '8px',
       }}
     >
-      <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
-      <input placeholder="Species" value={species} onChange={e => setSpecies(e.target.value)} />
-      <input type="date" value={lastWateredDate} onChange={e => setLastWateredDate(e.target.value)} />
-      <input type="number" value={wateringFrequencyDays} onChange={e => setWateringFrequencyDays(e.target.value)} />
-      <input placeholder="Soil Type" value={soilType} onChange={e => setSoilType(e.target.value)} />
-      <input placeholder="Fertilizer" value={fertilizer} onChange={e => setFertilizer(e.target.value)} />
-      <input placeholder="Sun Exposure" value={sunExposure} onChange={e => setSunExposure(e.target.value)} />
-      <input placeholder="Ideal Temperature" value={idealTemperature} onChange={e => setIdealTemperature(e.target.value)} />
-      <textarea placeholder="Notes" value={notes} onChange={e => setNotes(e.target.value)} />
+      <label style={fieldStyle}>
+        Name
+        <input value={name} onChange={e => setName(e.target.value)} />
+      </label>
+      <label style={fieldStyle}>
+        Species
+        <input value={species} onChange={e => setSpecies(e.target.value)} />
+      </label>
+      <label style={fieldStyle}>
+        Last Watered Date
+        <input type="date" value={lastWateredDate} onChange={e => setLastWateredDate(e.target.value)} />
+      </label>
+      <label style={fieldStyle}>
+        Watering Frequency (days)
+        <input type="number" value={wateringFrequencyDays} onChange={e => setWateringFrequencyDays(e.target.value)} />
+      </label>
+      <label style={fieldStyle}>
+        Soil Type
+        <input value={soilType} onChange={e => setSoilType(e.target.value)} />
+      </label>
+      <label style={fieldStyle}>
+        Fertilizer
+        <input value={fertilizer} onChange={e => setFertilizer(e.target.value)} />
+      </label>
+      <label style={fieldStyle}>
+        Sun Exposure
+        <input value={sunExposure} onChange={e => setSunExposure(e.target.value)} />
+      </label>
+      <label style={fieldStyle}>
+        Ideal Temperature
+        <input value={idealTemperature} onChange={e => setIdealTemperature(e.target.value)} />
+      </label>
+      <label style={fieldStyle}>
+        Notes
+        <textarea value={notes} onChange={e => setNotes(e.target.value)} />
+      </label>
 
-      <label>
-        Public:
+      <label style={fieldStyle}>
+        Public
         <select value={isPublic.toString()} onChange={e => setIsPublic(e.target.value === 'true')}>
           <option value="true">True</option>
           <option value="false">False</option>
