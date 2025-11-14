@@ -184,9 +184,11 @@ const PlantDetail = ({ username }) => {
             <b>Ideal Temp:</b> {plant.idealTemperature || 'N/A'}
           </p>
 
-          <p>
-            <b>Public:</b> {plant.isPublic ? 'True' : 'False'}
-          </p>
+          {isOwner && (
+            <p>
+              <b>Public:</b> {plant.isPublic ? 'True' : 'False'}
+            </p>
+          )}
 
           <p>
             <b>Notes:</b> {plant.notes || 'N/A'}
