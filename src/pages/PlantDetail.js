@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import EditPlant from '../components/EditPlant'
 
-const PlantDetails = ({ username }) => {
+const PlantDetail = ({ username }) => {
   const { id: plantId } = useParams()
   const navigate = useNavigate()
   const [plant, setPlant] = useState(null)
@@ -12,9 +12,11 @@ const PlantDetails = ({ username }) => {
   const [newCommentText, setNewCommentText] = useState({})
   const [editing, setEditing] = useState(false)
 
+  // Controls showing comments
+  const [openComments, setOpenComments] = useState({})
+
   const normalizePlant = plantData => ({
     ...plantData,
-    // backend sends `public`, UI expects `isPublic`
     isPublic: typeof plantData.isPublic === 'boolean' ? plantData.isPublic : Boolean(plantData.public),
   })
 
@@ -64,10 +66,10 @@ const PlantDetails = ({ username }) => {
   // Water plant
   const waterPlant = async () => {
     if (!plant) return
+
     try {
       const today = new Date().toISOString().split('T')[0]
 
-      // IMPORTANT FIX: Send correct field "public" not "isPublic"
       const payload = {
         name: plant.name,
         species: plant.species,
@@ -78,7 +80,7 @@ const PlantDetails = ({ username }) => {
         sunExposure: plant.sunExposure,
         idealTemperature: plant.idealTemperature,
         notes: plant.notes,
-        public: plant.isPublic, // FIXED HERE
+        public: plant.isPublic,
       }
 
       await axios.put(`http://localhost:8080/api/plants/${plantId}?username=${username}`, payload)
@@ -93,9 +95,7 @@ const PlantDetails = ({ username }) => {
   const addLog = async () => {
     if (!newLogText.trim()) return
     try {
-      await axios.post(`http://localhost:8080/api/plants/${plantId}/logs?username=${username}`, {
-        note: newLogText,
-      })
+      await axios.post(`http://localhost:8080/api/plants/${plantId}/logs?username=${username}`, { note: newLogText })
       setNewLogText('')
       fetchPlant()
     } catch (err) {
@@ -107,12 +107,17 @@ const PlantDetails = ({ username }) => {
   const addComment = async logIndex => {
     const text = newCommentText[logIndex]
     if (!text || !text.trim()) return
+
     try {
-      await axios.post(`http://localhost:8080/api/plants/${plantId}/logs/${logIndex}/comments?username=${username}`, {
-        comment: text,
-        username,
+      await axios.post(`http://localhost:8080/api/plants/${plantId}/logs/${logIndex}/comments?username=${username}`, { comment: text, username })
+
+      // Reset input
+      setNewCommentText(prev => {
+        const copy = { ...prev }
+        delete copy[logIndex]
+        return copy
       })
-      setNewCommentText(prev => ({ ...prev, [logIndex]: '' }))
+
       fetchPlant()
     } catch (err) {
       console.error('Add comment error:', err)
@@ -132,7 +137,7 @@ const PlantDetails = ({ username }) => {
   if (loading) return <p>Loading...</p>
   if (!plant) return <p>Plant not found</p>
 
-  // Determine next watering date / overdue
+  // Determine next watering date
   let nextWaterDate = 'N/A'
   let overdue = false
   if (plant.lastWateredDate && plant.wateringFrequencyDays) {
@@ -153,7 +158,7 @@ const PlantDetails = ({ username }) => {
             {plant.name} ({plant.species})
           </h2>
 
-          {/* EDIT / WATER / DELETE */}
+          {/* ACTION BUTTONS */}
           <div style={{ marginBottom: '15px' }}>
             <button onClick={() => setEditing(true)} style={{ marginRight: '10px' }}>
               Edit Plant
@@ -179,7 +184,7 @@ const PlantDetails = ({ username }) => {
           </div>
 
           <p>
-            <b>Last Watered:</b> {plant.lastWateredDate || 'N/A'}
+            <b>Last Watered:</b> {plant.lastWateredDate}
           </p>
           <p>
             <b>Next Water:</b> {nextWaterDate}
@@ -218,31 +223,107 @@ const PlantDetails = ({ username }) => {
 
       {plant.logs && plant.logs.length > 0 ? (
         <ul>
-          {plant.logs.map((log, index) => (
-            <li key={index} style={{ marginBottom: '15px', border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
-              <p>{log.note || 'No note'}</p>
-              <p>
-                <i>{new Date(log.timestamp).toLocaleString()}</i>
-              </p>
+          {[...plant.logs]
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .map((log, index) => {
+              const realIndex = plant.logs.indexOf(log)
 
-              {log.comments && log.comments.length > 0 && (
-                <ul>
-                  {log.comments.map((c, i) => (
-                    <li key={i}>
-                      {c.username}: {c.comment} <i>({new Date(c.timestamp).toLocaleString()})</i>
-                    </li>
-                  ))}
-                </ul>
-              )}
+              return (
+                <li
+                  key={realIndex}
+                  style={{
+                    marginBottom: '15px',
+                    border: '1px solid #ccc',
+                    padding: '10px',
+                    borderRadius: '5px',
+                  }}
+                >
+                  <p>{log.note}</p>
+                  <p>
+                    <i>{new Date(log.timestamp).toLocaleString()}</i>
+                  </p>
 
-              <input type="text" placeholder="Add comment" value={newCommentText[index] || ''} onChange={e => setNewCommentText(prev => ({ ...prev, [index]: e.target.value }))} />
-              <button onClick={() => addComment(index)}>Add Comment</button>
+                  {/* SHOW/HIDE COMMENTS */}
+                  <button
+                    onClick={() =>
+                      setOpenComments(prev => ({
+                        ...prev,
+                        [realIndex]: !prev[realIndex],
+                      }))
+                    }
+                    style={{ marginBottom: '10px' }}
+                  >
+                    {openComments[realIndex] ? 'Hide Comments' : 'Show Comments'}
+                  </button>
 
-              <button onClick={() => deleteLog(index)} style={{ marginLeft: '10px', color: 'red' }}>
-                Delete Log
-              </button>
-            </li>
-          ))}
+                  {/* COMMENTS */}
+                  {openComments[realIndex] && (
+                    <>
+                      {log.comments && log.comments.length > 0 ? (
+                        <ul>
+                          {log.comments.map((c, i) => (
+                            <li key={i}>
+                              <b>{c.username}</b>: {c.comment} <i>({new Date(c.timestamp).toLocaleString()})</i>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>No comments yet.</p>
+                      )}
+                    </>
+                  )}
+
+                  <hr />
+
+                  {/* ADD COMMENT BUTTON → SHOW INPUT */}
+                  {!newCommentText.hasOwnProperty(realIndex) ? (
+                    <button
+                      onClick={() =>
+                        setNewCommentText(prev => ({
+                          ...prev,
+                          [realIndex]: '',
+                        }))
+                      }
+                    >
+                      Add Comment
+                    </button>
+                  ) : (
+                    <>
+                      <input
+                        type="text"
+                        placeholder="Write your comment..."
+                        value={newCommentText[realIndex]}
+                        onChange={e =>
+                          setNewCommentText(prev => ({
+                            ...prev,
+                            [realIndex]: e.target.value,
+                          }))
+                        }
+                        style={{ marginTop: '10px', width: '100%' }}
+                      />
+
+                      <button onClick={() => addComment(realIndex)}>Submit</button>
+
+                      <button
+                        onClick={() => {
+                          const copy = { ...newCommentText }
+                          delete copy[realIndex]
+                          setNewCommentText(copy)
+                        }}
+                        style={{ marginLeft: '10px', color: 'red' }}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  )}
+
+                  {/* DELETE LOG */}
+                  <button onClick={() => deleteLog(realIndex)} style={{ marginLeft: '10px', color: 'red' }}>
+                    Delete Log
+                  </button>
+                </li>
+              )
+            })}
         </ul>
       ) : (
         <p>No logs yet.</p>
@@ -256,4 +337,4 @@ const PlantDetails = ({ username }) => {
   )
 }
 
-export default PlantDetails
+export default PlantDetail
