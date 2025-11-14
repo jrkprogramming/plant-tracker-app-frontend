@@ -24,8 +24,15 @@ const EditPlant = ({ plant, onUpdate, onCancel }) => {
       setIdealTemperature(plant.idealTemperature || '')
       setNotes(plant.notes || '')
 
-      // Expecting backend value "isPublic"
-      setIsPublic(Boolean(plant.isPublic))
+      // Prefer the backend's "public" field, fall back to "isPublic" if present
+      if (typeof plant.public === 'boolean') {
+        setIsPublic(plant.public)
+      } else if (typeof plant.isPublic === 'boolean') {
+        setIsPublic(plant.isPublic)
+      } else {
+        // default if neither is present
+        setIsPublic(true)
+      }
     }
   }, [plant])
 
@@ -38,7 +45,7 @@ const EditPlant = ({ plant, onUpdate, onCancel }) => {
       return
     }
 
-    // IMPORTANT FIX: backend expects `public`, not `isPublic`
+    // Backend expects `public`
     onUpdate(id, {
       name,
       species,
@@ -49,7 +56,7 @@ const EditPlant = ({ plant, onUpdate, onCancel }) => {
       sunExposure,
       idealTemperature,
       notes,
-      public: isPublic, // <-- FIXED HERE
+      public: isPublic,
     })
   }
 

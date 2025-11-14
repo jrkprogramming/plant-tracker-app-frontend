@@ -44,12 +44,8 @@ const CommunityPlants = () => {
                   <strong>{p.name}</strong> <small>({p.species})</small>
                   <div style={{ fontSize: 13, color: '#555' }}>Owner: {p.ownerUsername}</div>
                 </div>
-
-                {/* view button: if you want to show public detail view later, link to a public details route.
-                    For now, navigate to the regular plant detail only if it's owned by the current user.
-                    We'll navigate to a public read-only details page if you want to implement it. */}
                 <div>
-                  <button onClick={() => navigate(`/plants/${plantId}`)}>View (may require auth)</button>
+                  <button onClick={() => navigate(`/plants/${plantId}`)}>View</button>
                 </div>
               </div>
             </li>
