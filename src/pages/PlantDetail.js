@@ -216,6 +216,7 @@ const PlantDetail = ({ username }) => {
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
             .map((log, idx) => {
               const realIndex = plant.logs.indexOf(log)
+              const commentCount = log.comments?.length || 0
 
               return (
                 <li key={realIndex} style={{ border: '1px solid #ccc', padding: 10, marginBottom: 15 }}>
@@ -224,16 +225,19 @@ const PlantDetail = ({ username }) => {
                     <i>{new Date(log.timestamp).toLocaleString()}</i>
                   </p>
 
-                  <button
-                    onClick={() =>
-                      setOpenComments(prev => ({
-                        ...prev,
-                        [realIndex]: !prev[realIndex],
-                      }))
-                    }
-                  >
-                    {openComments[realIndex] ? 'Hide Comments' : 'Show Comments'}
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                      onClick={() =>
+                        setOpenComments(prev => ({
+                          ...prev,
+                          [realIndex]: !prev[realIndex],
+                        }))
+                      }
+                    >
+                      {openComments[realIndex] ? 'Hide Comments' : 'Show Comments'}
+                    </button>
+                    <span>({commentCount})</span>
+                  </div>
 
                   {openComments[realIndex] && (
                     <>
