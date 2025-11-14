@@ -42,6 +42,9 @@ const PlantDashboard = ({ username, onLogout }) => {
       <button onClick={() => navigate('/add-plant')} style={{ marginLeft: '10px' }}>
         ➕ Add Plant
       </button>
+      <button onClick={() => navigate('/community')} style={{ marginLeft: '10px' }}>
+        🌍 Community
+      </button>
 
       {/* 🔍 Search bar */}
       <div style={{ marginTop: '20px' }}>

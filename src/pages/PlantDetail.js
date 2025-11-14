@@ -12,12 +12,18 @@ const PlantDetails = ({ username }) => {
   const [newCommentText, setNewCommentText] = useState({})
   const [editing, setEditing] = useState(false)
 
+  const normalizePlant = plantData => ({
+    ...plantData,
+    // backend sends `public`, UI expects `isPublic`
+    isPublic: typeof plantData.isPublic === 'boolean' ? plantData.isPublic : Boolean(plantData.public),
+  })
+
   // Fetch plant details
   const fetchPlant = async () => {
     try {
       setLoading(true)
       const res = await axios.get(`http://localhost:8080/api/plants/${plantId}?username=${username}`)
-      setPlant(res.data)
+      setPlant(normalizePlant(res.data))
       setLoading(false)
     } catch (err) {
       console.error('Error fetching plant:', err)
@@ -60,10 +66,22 @@ const PlantDetails = ({ username }) => {
     if (!plant) return
     try {
       const today = new Date().toISOString().split('T')[0]
-      await axios.put(`http://localhost:8080/api/plants/${plantId}?username=${username}`, {
-        ...plant,
+
+      // IMPORTANT FIX: Send correct field "public" not "isPublic"
+      const payload = {
+        name: plant.name,
+        species: plant.species,
         lastWateredDate: today,
-      })
+        wateringFrequencyDays: plant.wateringFrequencyDays,
+        soilType: plant.soilType,
+        fertilizer: plant.fertilizer,
+        sunExposure: plant.sunExposure,
+        idealTemperature: plant.idealTemperature,
+        notes: plant.notes,
+        public: plant.isPublic, // FIXED HERE
+      }
+
+      await axios.put(`http://localhost:8080/api/plants/${plantId}?username=${username}`, payload)
       fetchPlant()
     } catch (err) {
       console.error('Error watering plant:', err)
@@ -170,31 +188,26 @@ const PlantDetails = ({ username }) => {
             <b>Watering Frequency:</b> {plant.wateringFrequencyDays} days
           </p>
 
-          {plant.soilType && (
-            <p>
-              <b>Soil Type:</b> {plant.soilType}
-            </p>
-          )}
-          {plant.fertilizer && (
-            <p>
-              <b>Fertilizer:</b> {plant.fertilizer}
-            </p>
-          )}
-          {plant.sunExposure && (
-            <p>
-              <b>Sun Exposure:</b> {plant.sunExposure}
-            </p>
-          )}
-          {plant.idealTemperature && (
-            <p>
-              <b>Ideal Temp:</b> {plant.idealTemperature}
-            </p>
-          )}
-          {plant.notes && (
-            <p>
-              <b>Notes:</b> {plant.notes}
-            </p>
-          )}
+          <p>
+            <b>Soil Type:</b> {plant.soilType || 'N/A'}
+          </p>
+          <p>
+            <b>Fertilizer:</b> {plant.fertilizer || 'N/A'}
+          </p>
+          <p>
+            <b>Sun Exposure:</b> {plant.sunExposure || 'N/A'}
+          </p>
+          <p>
+            <b>Ideal Temp:</b> {plant.idealTemperature || 'N/A'}
+          </p>
+
+          <p>
+            <b>Public:</b> {plant.isPublic ? 'True' : 'False'}
+          </p>
+
+          <p>
+            <b>Notes:</b> {plant.notes || 'N/A'}
+          </p>
         </>
       ) : (
         <EditPlant plant={plant} onUpdate={updatePlant} onCancel={() => setEditing(false)} />

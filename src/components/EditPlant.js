@@ -1,47 +1,56 @@
 import React, { useState, useEffect } from 'react'
 
 const EditPlant = ({ plant, onUpdate, onCancel }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    species: '',
-    lastWateredDate: '',
-    wateringFrequencyDays: '',
-    soilType: '',
-    fertilizer: '',
-    sunExposure: '',
-    idealTemperature: '',
-    notes: '',
-  })
+  const [name, setName] = useState('')
+  const [species, setSpecies] = useState('')
+  const [lastWateredDate, setLastWateredDate] = useState('')
+  const [wateringFrequencyDays, setWateringFrequencyDays] = useState('')
+  const [soilType, setSoilType] = useState('')
+  const [fertilizer, setFertilizer] = useState('')
+  const [sunExposure, setSunExposure] = useState('')
+  const [idealTemperature, setIdealTemperature] = useState('')
+  const [notes, setNotes] = useState('')
+  const [isPublic, setIsPublic] = useState(true)
 
   useEffect(() => {
     if (plant) {
-      setFormData({
-        name: plant.name || '',
-        species: plant.species || '',
-        lastWateredDate: plant.lastWateredDate || '',
-        wateringFrequencyDays: plant.wateringFrequencyDays || '',
-        soilType: plant.soilType || '',
-        fertilizer: plant.fertilizer || '',
-        sunExposure: plant.sunExposure || '',
-        idealTemperature: plant.idealTemperature || '',
-        notes: plant.notes || '',
-      })
+      setName(plant.name || '')
+      setSpecies(plant.species || '')
+      setLastWateredDate(plant.lastWateredDate || '')
+      setWateringFrequencyDays(plant.wateringFrequencyDays || '')
+      setSoilType(plant.soilType || '')
+      setFertilizer(plant.fertilizer || '')
+      setSunExposure(plant.sunExposure || '')
+      setIdealTemperature(plant.idealTemperature || '')
+      setNotes(plant.notes || '')
+
+      // Expecting backend value "isPublic"
+      setIsPublic(Boolean(plant.isPublic))
     }
   }, [plant])
 
-  const handleChange = e => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
-
   const handleSubmit = e => {
     e.preventDefault()
-    const id = plant?.id || plant?._id
+
+    const id = plant._id || plant.id
     if (!id) {
-      console.error('Cannot update plant: id is undefined')
+      console.error('Missing ID on update')
       return
     }
-    onUpdate(id, formData)
+
+    // IMPORTANT FIX: backend expects `public`, not `isPublic`
+    onUpdate(id, {
+      name,
+      species,
+      lastWateredDate,
+      wateringFrequencyDays,
+      soilType,
+      fertilizer,
+      sunExposure,
+      idealTemperature,
+      notes,
+      public: isPublic, // <-- FIXED HERE
+    })
   }
 
   return (
@@ -55,38 +64,30 @@ const EditPlant = ({ plant, onUpdate, onCancel }) => {
         border: '1px solid #ddd',
         padding: '10px',
         borderRadius: '8px',
-        backgroundColor: '#f9f9f9',
       }}
     >
-      {[
-        { label: 'Name', name: 'name' },
-        { label: 'Species', name: 'species' },
-        { label: 'Last Watered Date', name: 'lastWateredDate', type: 'date' },
-        { label: 'Watering Frequency (days)', name: 'wateringFrequencyDays', type: 'number' },
-        { label: 'Soil Type', name: 'soilType' },
-        { label: 'Fertilizer', name: 'fertilizer' },
-        { label: 'Sun Exposure', name: 'sunExposure' },
-        { label: 'Ideal Temperature', name: 'idealTemperature' },
-      ].map(field => (
-        <div key={field.name}>
-          <label>
-            {field.label}:
-            <input type={field.type || 'text'} name={field.name} value={formData[field.name]} onChange={handleChange} style={{ width: '100%' }} />
-          </label>
-        </div>
-      ))}
+      <input placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
+      <input placeholder="Species" value={species} onChange={e => setSpecies(e.target.value)} />
+      <input type="date" value={lastWateredDate} onChange={e => setLastWateredDate(e.target.value)} />
+      <input type="number" value={wateringFrequencyDays} onChange={e => setWateringFrequencyDays(e.target.value)} />
+      <input placeholder="Soil Type" value={soilType} onChange={e => setSoilType(e.target.value)} />
+      <input placeholder="Fertilizer" value={fertilizer} onChange={e => setFertilizer(e.target.value)} />
+      <input placeholder="Sun Exposure" value={sunExposure} onChange={e => setSunExposure(e.target.value)} />
+      <input placeholder="Ideal Temperature" value={idealTemperature} onChange={e => setIdealTemperature(e.target.value)} />
+      <textarea placeholder="Notes" value={notes} onChange={e => setNotes(e.target.value)} />
 
       <label>
-        Notes:
-        <textarea name="notes" value={formData.notes} onChange={handleChange} style={{ width: '100%' }} />
+        Public:
+        <select value={isPublic.toString()} onChange={e => setIsPublic(e.target.value === 'true')}>
+          <option value="true">True</option>
+          <option value="false">False</option>
+        </select>
       </label>
 
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <button type="submit">💾 Update Plant</button>
-        <button type="button" onClick={onCancel}>
-          Cancel
-        </button>
-      </div>
+      <button type="submit">Update Plant</button>
+      <button type="button" onClick={onCancel}>
+        Cancel
+      </button>
     </form>
   )
 }
