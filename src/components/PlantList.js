@@ -9,11 +9,10 @@ const PlantList = ({ plants, username, onView, onRefresh }) => {
     try {
       const today = new Date().toISOString().split('T')[0] // YYYY-MM-DD
 
-      // Make a full copy of the plant with updated lastWateredDate
       const updatedPlant = {
         ...plant,
         lastWateredDate: today,
-        logs: plant.logs || [], // preserve logs
+        logs: plant.logs || [],
       }
 
       const plantId = plant.id || plant._id
@@ -49,7 +48,7 @@ const PlantList = ({ plants, username, onView, onRefresh }) => {
               border: '1px solid #ccc',
               borderRadius: '8px',
               padding: '10px',
-              backgroundColor: overdue ? '#ffe6e6' : 'white', // light red if overdue
+              backgroundColor: overdue ? '#ffe6e6' : 'white',
             }}
           >
             <div>
