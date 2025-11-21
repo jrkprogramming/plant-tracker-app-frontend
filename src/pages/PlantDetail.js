@@ -113,6 +113,7 @@ const PlantDetail = ({ username }) => {
       let photoUrl = ''
       if (newLogPhoto) {
         photoUrl = await uploadLogPhoto(newLogPhoto)
+        console.log('[Log Upload] Image URL:', photoUrl)
       }
 
       const payload = { note: newLogText }
@@ -269,6 +270,9 @@ const PlantDetail = ({ username }) => {
           {[...plant.logs]
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
             .map((log, idx) => {
+              if (log.photoUrl) {
+                console.log('IMAGE URL:', log.photoUrl)
+              }
               const realIndex = plant.logs.indexOf(log)
               const commentCount = log.comments?.length || 0
 
