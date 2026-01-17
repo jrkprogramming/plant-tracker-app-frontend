@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import EditPlant from '../components/EditPlant'
@@ -9,9 +9,12 @@ const PlantDetail = ({ username }) => {
   const [plant, setPlant] = useState(null)
   const [loading, setLoading] = useState(true)
   const [newLogText, setNewLogText] = useState('')
+  const [newLogPhoto, setNewLogPhoto] = useState(null)
   const [newCommentText, setNewCommentText] = useState({})
   const [editing, setEditing] = useState(false)
   const [openComments, setOpenComments] = useState({})
+  const [addingLog, setAddingLog] = useState(false)
+  const logPhotoInputRef = useRef(null)
 
   const normalizePlant = plantData => ({
     ...plantData,
@@ -28,6 +31,25 @@ const PlantDetail = ({ username }) => {
       setPlant(null)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Uploads the optional log photo to the backend, preferring log-specific endpoint with fallback.
+  const uploadLogPhoto = async file => {
+    const tryUpload = async url => {
+      const formData = new FormData()
+      formData.append('file', file)
+      const res = await axios.post(url, formData)
+      return res.data
+    }
+
+    try {
+      return await tryUpload(`http://localhost:8080/api/plants/${plantId}/logs/upload?username=${encodeURIComponent(username)}`)
+    } catch (err) {
+      const status = err?.response?.status
+      if (status !== 404 && status !== 405) throw err
+      console.warn('Log upload endpoint unavailable, falling back to generic upload route.', status)
+      return await tryUpload(`http://localhost:8080/api/plants/${plantId}/upload`)
     }
   }
 
@@ -81,10 +103,33 @@ const PlantDetail = ({ username }) => {
   }
 
   const addLog = async () => {
-    if (!newLogText.trim()) return
-    await axios.post(`http://localhost:8080/api/plants/${plantId}/logs?username=${username}`, { note: newLogText })
-    setNewLogText('')
-    fetchPlant()
+    if (!newLogText.trim()) {
+      alert('Please add a note for this log.')
+      return
+    }
+    setAddingLog(true)
+
+    try {
+      let photoUrl = ''
+      if (newLogPhoto) {
+        photoUrl = await uploadLogPhoto(newLogPhoto)
+        console.log('[Log Upload] Image URL:', photoUrl)
+      }
+
+      const payload = { note: newLogText }
+      if (photoUrl) payload.photoUrl = photoUrl
+
+      await axios.post(`http://localhost:8080/api/plants/${plantId}/logs?username=${username}`, payload)
+      setNewLogText('')
+      setNewLogPhoto(null)
+      if (logPhotoInputRef.current) logPhotoInputRef.current.value = ''
+      fetchPlant()
+    } catch (err) {
+      console.error('Error adding log:', err)
+      alert('Failed to add log. Try again.')
+    } finally {
+      setAddingLog(false)
+    }
   }
 
   const addComment = async logIndex => {
@@ -203,7 +248,17 @@ const PlantDetail = ({ username }) => {
         <>
           <h4>Add New Log</h4>
           <textarea value={newLogText} onChange={e => setNewLogText(e.target.value)} />
-          <button onClick={addLog}>Add Log</button>
+          <input
+            type="file"
+            accept="image/*"
+            ref={logPhotoInputRef}
+            onChange={e => setNewLogPhoto(e.target.files?.[0] || null)}
+            style={{ marginTop: 8 }}
+          />
+          {newLogPhoto && <small>Selected: {newLogPhoto.name}</small>}
+          <button onClick={addLog} disabled={addingLog} style={{ marginTop: 8 }}>
+            {addingLog ? 'Saving...' : 'Add Log'}
+          </button>
         </>
       )}
 
@@ -215,12 +270,22 @@ const PlantDetail = ({ username }) => {
           {[...plant.logs]
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
             .map((log, idx) => {
+              if (log.photoUrl) {
+                console.log('IMAGE URL:', log.photoUrl)
+              }
               const realIndex = plant.logs.indexOf(log)
               const commentCount = log.comments?.length || 0
 
               return (
                 <li key={realIndex} style={{ border: '1px solid #ccc', padding: 10, marginBottom: 15 }}>
                   <p>{log.note}</p>
+                  {log.photoUrl && (
+                    <img
+                      src={log.photoUrl}
+                      alt="Plant log attachment"
+                      style={{ width: '100%', maxHeight: 250, objectFit: 'cover', borderRadius: 8, margin: '10px 0' }}
+                    />
+                  )}
                   <p>
                     <i>{new Date(log.timestamp).toLocaleString()}</i>
                   </p>
